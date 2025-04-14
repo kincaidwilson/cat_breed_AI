@@ -27,25 +27,32 @@ class_names = sorted([
 # Prediction route
 @app.route('/predict', methods=['POST'])
 def predict():
+    print("Received request")
     if 'file' not in request.files:
+        print("No file uploaded")
         return jsonify({'error': 'No image file provided'}), 400
-    
+
     file = request.files['file']
     try:
+        print("Loading image...")
         img = Image.open(file.stream).resize((224, 224))
         img_array = np.array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
 
+        print("Running prediction...")
         predictions = model.predict(img_array)
         predicted_index = int(np.argmax(predictions))
         confidence = float(predictions[0][predicted_index])
 
+        print("Prediction complete")
         return jsonify({
             'breed': class_names[predicted_index],
             'confidence': round(confidence * 100, 2)
         })
     except Exception as e:
+        print("Error during prediction:", e)
         return jsonify({'error': str(e)}), 500
+
 
 @app.route("/", methods=["GET"])
 def home():
